@@ -3,7 +3,7 @@ import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash
 
-import pickledb
+import shelve
 
 # ############# database setup
 
@@ -11,7 +11,6 @@ DATABASE = 'database.db'
 
 # EB looks for an 'application' callable by default.
 application = Flask(__name__)
-
 
 #
 # application.config.from_object(__name__)
@@ -74,14 +73,21 @@ def create_game():
 
 
 def pickle_post():
-    db = pickledb.load('example.db', False)
-    db.set("hi", "wassup")
+    db = shelve.open("spam")
+    db['eggs'] = 'eggooo'
     return "posted"
 
 
 def pickle_get():
-    db = pickledb.load('example.db', False)
-    return db.get("hi")
+    db = shelve.open("spam")
+    a = "fail"
+    try:
+        if db.__contains__('eggs'):
+            a = db['eggs']
+    finally:
+        db.close()
+    return a
+    # return "failure"
 
 
 @application.route('/create', methods=['GET', 'POST'])
