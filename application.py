@@ -1,9 +1,11 @@
 import os
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
-     render_template, flash
+     render_template, flash, jsonify
 
 import shelve
+import random
+import json
 
 # ############# database setup
 
@@ -69,7 +71,19 @@ def create_game():
 
     :return game_code
     """
-    pass
+    num = random.randint(10, 1000)
+    # print(num)
+    #return str(num)
+    data = {"game_code": num}
+    return jsonify(data)
+
+
+
+
+@application.route('/create', methods=['GET', 'POST'])
+def create():
+    if request.method == 'GET':
+        return create_game()
 
 
 def pickle_post():
@@ -90,12 +104,6 @@ def pickle_get():
     # return "failure"
 
 
-@application.route('/create', methods=['GET', 'POST'])
-def create():
-    if request.method == 'POST':
-        return pickle_post()
-    else:
-        return pickle_get()
 
 
 
