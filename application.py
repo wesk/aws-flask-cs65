@@ -65,7 +65,6 @@ application = Flask(__name__)
 
 # ############## GAME SETUP ##################
 
-
 def create_game():
     """Commander begins the game setup process with this command
 
@@ -76,8 +75,6 @@ def create_game():
     #return str(num)
     data = {"game_code": num}
     return jsonify(data)
-
-
 
 
 @application.route('/create', methods=['GET', 'POST'])
@@ -104,10 +101,7 @@ def pickle_get():
     # return "failure"
 
 
-
-
-
-def create_account():
+def create_account(username):
     """POST
 
     Players create their accounts once the game code has been sent out
@@ -117,7 +111,21 @@ def create_account():
 
     :return: user_id
     """
-    pass
+
+    return jsonify({username: "Created", "user_id": 0})
+
+
+@application.route('/create_acct', methods=['GET', 'POST'])
+def create_acct():
+    if request.method == 'POST':
+        dat = request.get_json()
+        if "game_id" in dat and "username" in dat:
+            return create_account(dat["username"])
+        else:
+            return "fail"
+        # return create_account(request.args.get("game_id"))
+    else:
+        return error_message()
 
 
 def get_number_of_players():
@@ -175,6 +183,14 @@ def set_task_status():
 
     """
     pass
+
+# ############## GENERAL UTILITIES ###################
+
+
+def error_message():
+    err = {"ERROR": "Invalid Request"}
+    return jsonify(err)
+
 
 # # print a nice greeting.
 # def say_hello(username = "World"):
