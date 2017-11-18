@@ -1,7 +1,69 @@
-from flask import Flask
-from flask import request
+import os
+import sqlite3
+from flask import Flask, request, session, g, redirect, url_for, abort, \
+     render_template, flash
+
+import pickledb
+
+# ############# database setup
+
+DATABASE = 'database.db'
+
+# EB looks for an 'application' callable by default.
+application = Flask(__name__)
+
+
+#
+# application.config.from_object(__name__)
+#
+# # Load default config and override config from an environment variable
+# application.config.update(dict(
+#     DATABASE=os.path.join(application.root_path, 'database.db'),
+#     SECRET_KEY='development key',
+#     USERNAME='admin',
+#     PASSWORD='default'
+# ))
+# application.config.from_envvar('APP_SETTINGS', silent=True)
+#
+#
+# def connect_db():
+#     """Connects to the specific database."""
+#     rv = sqlite3.connect(application.config['DATABASE'])
+#     rv.row_factory = sqlite3.Row
+#     return rv
+#
+#
+# def get_db():
+#     """Opens a new database connection if there is none yet for the
+#     current application context.
+#     """
+#     if not hasattr(g, 'sqlite_db'):
+#         g.sqlite_db = connect_db()
+#     return g.sqlite_db
+#
+#
+# @application.teardown_appcontext
+# def close_db(error):
+#     """Closes the database again at the end of the request."""
+#     if hasattr(g, 'sqlite_db'):
+#         g.sqlite_db.close()
+#
+#
+# def init_db():
+#     db = get_db()
+#     with application.open_resource('schema.sql', mode='r') as f:
+#         db.cursor().executescript(f.read())
+#     db.commit()
+#
+#
+# @application.cli.command('initdb')
+# def initdb_command():
+#     """Initializes the database."""
+#     init_db()
+#     print('Initialized the database.')
 
 # ############## GAME SETUP ##################
+
 
 def create_game():
     """Commander begins the game setup process with this command
@@ -9,6 +71,27 @@ def create_game():
     :return game_code
     """
     pass
+
+
+def pickle_post():
+    db = pickledb.load('example.db', False)
+    db.set("hi", "wassup")
+    return "posted"
+
+
+def pickle_get():
+    db = pickledb.load('example.db', False)
+    return db.get("hi")
+
+
+@application.route('/create', methods=['GET', 'POST'])
+def create():
+    if request.method == 'POST':
+        return pickle_post()
+    else:
+        return pickle_get()
+
+
 
 def create_account():
     """POST
@@ -22,20 +105,40 @@ def create_account():
     """
     pass
 
+
 def get_number_of_players():
     """Commander can see how many players have logged into the session so far
 
     :return: number_of_players
     """
 
+
 def start_game():
-    """POST? GET?
+    """
 
     Once all the players have created accounts, the commander can start the game"""
     pass
 
 
-# ############## GENERAL ##################
+# ############## COMMANDER ##################
+
+def set_state():
+    """ Set overall ship health, machine healths, and machine assignments
+    :param: ship_health
+    :param: machine_healths
+    :param: current_tasks [task_id, user_id, machine_id]
+    """
+    pass
+
+
+def get_task_status():
+    """
+    :param: task_id
+    :return: task_status
+    """
+    pass
+
+# ############## PLAYER ##################
 
 
 def get_state():
@@ -43,47 +146,34 @@ def get_state():
 
     :return: ship_health: (0 < ship_health <= 25)
     :return: array of machine healths (5x machines with health 5 = 25 health maximum)
-    :return: array of machine assignments, ie what players are assigned to what machines
+    :return: array of current tasks [task_id, user_id, machine_id]
+
+    task_id is a unique integer which increments as new tasks are generated
     """
     return "<h1>GAME STATUS</h1>\n"
 
 
-# ############## COMMANDER ##################
+def set_task_status():
+    """POST the result (true or false) to the task_id on the server
 
-
-def make_assignment():
-    """POST
-
-    :param: player_id
-    :param: machine_id
-    """
-    pass
-
-
-# ############## PLAYER ##################
-
-
-def return_task_status():
-    """POST
-
-    :param: machine_id
+    :param: task_id
     :param: True (success) / False (failure)
 
     """
     pass
 
-# print a nice greeting.
-def say_hello(username = "World"):
-    return '<p>Hello %s!</p>\n' % username
-
-
-
-def do_the_login():
-    return "LOGGING IN -- POST"
-
-
-def show_the_login_form():
-    return "THIS IS THE LOGIN FORM -- GET"
+# # print a nice greeting.
+# def say_hello(username = "World"):
+#     return '<p>Hello %s!</p>\n' % username
+#
+#
+#
+# def do_the_login():
+#     return "LOGGING IN -- POST"
+#
+#
+# def show_the_login_form():
+#     return "THIS IS THE LOGIN FORM -- GET"
 
 # some bits of text for the page.
 header_text = '''
@@ -95,28 +185,29 @@ instructions = '''
 home_link = '<p><a href="/">Back</a></p>\n'
 footer_text = '</body>\n</html>'
 
-# EB looks for an 'application' callable by default.
-application = Flask(__name__)
-
-# add a rule for the index page.
-application.add_url_rule('/', 'index', (lambda: header_text +
-    say_hello() + instructions + footer_text))
-
-# /status displays the ship status
-application.add_url_rule('/state', "get_game_state", get_game_state)
 
 
-@application.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        return do_the_login()
-    else:
-        return show_the_login_form()
+# # add a rule for the index page.
+# application.add_url_rule('/', 'index', (lambda: header_text +
+#     say_hello() + instructions + footer_text))
+#
+# # /status displays the ship status
+# application.add_url_rule('/state', "get_game_state", get_game_state)
+
+
+# @application.route('/login', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         return do_the_login()
+#     else:
+#         return show_the_login_form()
+
 
 # # add a rule when the page is accessed with a name appended to the site
 # # URL.
 # application.add_url_rule('/<username>', 'hello', (lambda username:
 #     header_text + say_hello(username) + home_link + footer_text))
+
 
 # run the app.
 if __name__ == "__main__":
