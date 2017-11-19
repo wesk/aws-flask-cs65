@@ -1,5 +1,5 @@
 import os
-import sqlite3
+# import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash, jsonify
 
@@ -22,7 +22,7 @@ import json
 # param: pass/fail (t/f)
 # param: machine_id
 
-# 
+#
 
 
 # ############# database setup
@@ -32,54 +32,15 @@ DATABASE = 'database.db'
 # EB looks for an 'application' callable by default.
 application = Flask(__name__)
 
-#
-# application.config.from_object(__name__)
-#
-# # Load default config and override config from an environment variable
-# application.config.update(dict(
-#     DATABASE=os.path.join(application.root_path, 'database.db'),
-#     SECRET_KEY='development key',
-#     USERNAME='admin',
-#     PASSWORD='default'
-# ))
-# application.config.from_envvar('APP_SETTINGS', silent=True)
-#
-#
-# def connect_db():
-#     """Connects to the specific database."""
-#     rv = sqlite3.connect(application.config['DATABASE'])
-#     rv.row_factory = sqlite3.Row
-#     return rv
-#
-#
-# def get_db():
-#     """Opens a new database connection if there is none yet for the
-#     current application context.
-#     """
-#     if not hasattr(g, 'sqlite_db'):
-#         g.sqlite_db = connect_db()
-#     return g.sqlite_db
-#
-#
-# @application.teardown_appcontext
-# def close_db(error):
-#     """Closes the database again at the end of the request."""
-#     if hasattr(g, 'sqlite_db'):
-#         g.sqlite_db.close()
-#
-#
-# def init_db():
-#     db = get_db()
-#     with application.open_resource('schema.sql', mode='r') as f:
-#         db.cursor().executescript(f.read())
-#     db.commit()
-#
-#
-# @application.cli.command('initdb')
-# def initdb_command():
-#     """Initializes the database."""
-#     init_db()
-#     print('Initialized the database.')
+
+def clear_and_restart():
+    db = shelve.open(DATABASE)
+    db["players"] = []
+    db["running"] = True
+    db["win"] = False
+    db["machine_health_arr"] = [5, 5, 5, 5, 5]
+    db["assignments"] = []
+
 
 # ############## GAME SETUP ##################
 
@@ -88,6 +49,10 @@ def create_game():
 
     :return game_code
     """
+
+    # reset all existing data to defaults
+    clear_and_restart()
+
     num = random.randint(10, 1000)
     # print(num)
     #return str(num)
@@ -95,42 +60,28 @@ def create_game():
     return jsonify(data)
 
 
-@application.route('/create', methods=['GET', 'POST'])
+@application.route('/create_game', methods=['GET', 'POST'])
 def create():
     if request.method == 'GET':
         return create_game()
 
 
-def pickle_post():
-    db = shelve.open("spam")
-    db['eggs'] = 'eggooo'
-    return "posted"
-
-
-def pickle_get():
-    db = shelve.open("spam")
-    a = "fail"
-    try:
-        if db.__contains__('eggs'):
-            a = db['eggs']
-    finally:
-        db.close()
-    return a
-    # return "failure"
-
-
-def create_account(username):
-    """POST
-
-    Players create their accounts once the game code has been sent out
-
-    :param game_code
-    :param username
-
-    :return: user_id
-    """
-
-    return jsonify({username: "Created", "user_id": 0})
+# def pickle_post():
+#     db = shelve.open("spam")
+#     db['eggs'] = 'eggooo'
+#     return "posted"
+#
+#
+# def pickle_get():
+#     db = shelve.open("spam")
+#     a = "fail"
+#     try:
+#         if db.__contains__('eggs'):
+#             a = db['eggs']
+#     finally:
+#         db.close()
+#     return a
+#     # return "failure"
 
 
 @application.route('/create_acct', methods=['GET', 'POST'])
@@ -144,6 +95,31 @@ def create_acct():
         # return create_account(request.args.get("game_id"))
     else:
         return error_message()
+
+
+def create_account(username):
+    """POST
+
+    Players create their accounts once the game code has been sent out
+
+    :param game_code
+    :param username
+
+    :return: user_id
+    """
+    db = shelve.open(DATABASE)
+
+    if "players" not in db.keys():
+        db["players"] = []
+
+    username_list = db["players"]
+    if username in username_list:
+        return jsonify({"STATUS": "FAILURE"})
+
+    username_list.append(username)
+    db["players"] = username_list
+
+    return jsonify({"STATUS": "SUCCESS", "user_id": len(username_list) - 1})
 
 
 def get_number_of_players():
