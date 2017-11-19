@@ -90,7 +90,7 @@ def create():
 def create_game():
     """Commander begins the game setup process with this command
 
-    :return game_code
+    :return game_id
     """
 
     # reset all existing data to defaults
@@ -99,7 +99,7 @@ def create_game():
     num = random.randint(10, 1000)
     # print(num)
     # return str(num)
-    data = {"game_code": num}
+    data = {"game_id": num}
     return jsonify(data)
 
 # def pickle_post():
@@ -137,7 +137,7 @@ def create_account(username):
 
     Players create their accounts once the game code has been sent out
 
-    :param game_code
+    :param game_id
     :param username
 
     :return: user_id
