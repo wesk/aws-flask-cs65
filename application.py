@@ -7,6 +7,24 @@ import shelve
 import random
 import json
 
+# SELF NOTES FROM 7pm Saturday brainstorm sesh
+# generate_event() (commander service calls this if we can't add random server events)
+
+# get_state()
+#
+# return: running (t/f), win (t/f), component_health_list (0-5,0-5,0-5,0-5,0-5), assignments
+# where each assignment is a pair [player_id, machine_id]
+
+# add_assignment()
+# param: player_id, machine_id
+
+# add_task_result()
+# param: pass/fail (t/f)
+# param: machine_id
+
+# 
+
+
 # ############# database setup
 
 DATABASE = 'database.db'
