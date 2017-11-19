@@ -36,8 +36,8 @@ application = Flask(__name__)
 def clear_and_restart():
     db = shelve.open(DATABASE)
     db["players"] = []
-    db["running"] = True
-    db["win"] = False
+    # status is either {setup, running, win, lose}
+    db["session_status"] = "setup"
     db["machine_health_arr"] = [5, 5, 5, 5, 5]
     db["assignments"] = []
     db["counter"] = 0
@@ -48,11 +48,8 @@ def check_if_everything_is_initialized():
     if "players" not in db.keys():
         db["players"] = []
 
-    if "running" not in db.keys():
-        db["running"] = True
-
-    if "win" not in db.keys():
-        db["win"] = False
+    if "session_status" not in db.keys():
+        db["session_status"] = "setup"
 
     if "machine_health_arr" not in db.keys():
         db["machine_health_arr"] = [5, 5, 5, 5, 5]
@@ -209,8 +206,7 @@ def get_state():
 
     check_if_everything_is_initialized()
 
-    state = jsonify({"running": db["running"],
-                     "win": db["win"],
+    state = jsonify({"session_status": db["session_status"],
                      "machine_health_arr": db["machine_health_arr"],
                      "assignments": db["assignments"],
                      "counter": db["counter"]})
@@ -228,26 +224,106 @@ def get_state():
 #     """
 #     pass
 
+@application.route('/commander_set_assignment', methods=['GET', 'POST'])
+def assign():
+    if request.method == 'POST':
+        dat = request.get_json()
+        if "player_id" in dat and "machine_id" in dat:
+            return set_assignment(dat["player_id"], dat["machine_id"])
+        else:
+            return error_message()
+    else:
+        return error_message()
 
-def get_task_status():
+
+def set_assignment(player_id, machine_id):
     """
-    :param: task_id
-    :return: task_status
+    :param: task_id, player_id
+
     """
-    pass
+    db = shelve.open(DATABASE)
+    check_if_everything_is_initialized()
+
+    if len(db["assignments"]) == 0:
+        db["assignments"] = db["assignments"].append([player_id, machine_id])
+
+    else:
+        machine_already_assigned = False
+        for pId, mId in db["assignments"]:
+            if mId == machine_id:
+                machine_already_assigned = True
+
+        if not machine_already_assigned:
+            db["assignments"] = db["assignments"].append([player_id, machine_id])
+
+
+@application.route('/commander_generate_event', methods=['GET', 'POST'])
+def gen_ev():
+    if request.method == 'GET':
+        return generate_event()
+    else:
+        return error_message()
+
+
+def generate_event():
+    """for now, just decrement the health of machine 0 for testing"""
+
+    db = shelve.open(DATABASE)
+    check_if_everything_is_initialized()
+
+    health = db["machine_health_arr"]
+    health[0] -= 1
+    db["machine_health_arr"] = health
+
 
 # ############## PLAYER ##################
 
+@application.route('/player_set_task_result', methods=['GET', 'POST'])
+def set_res():
+    if request.method == 'POST':
+        dat = request.get_json()
+        if "machine_id" in dat and "result" in dat:
+            return set_task_result(dat["machine_id"], dat["result"])
+        else:
+            return error_message()
+    else:
+        return error_message()
 
 
-def set_task_status():
+def set_task_result(machine_id, result):
     """POST the result (true or false) to the task_id on the server
 
     :param: task_id
-    :param: True (success) / False (failure)
+    :param: result (True (success) / False (failure))
 
     """
-    pass
+
+    db = shelve.open(DATABASE)
+    check_if_everything_is_initialized()
+
+    # check to see if this is a valid request
+    found = False
+    found_id = -1
+    for index, assignment in enumerate(db["assignments"]):
+        if assignment[1] == machine_id:
+            found = True
+            found_id = index
+    if not found:
+        return error_message()
+
+    # remove it from the assignments dictionary
+    assi = db["assignments"]
+    del assi[found_id]
+    db["assignments"] = assi
+
+    # if success, increment health
+    if result:
+        # increment
+        health = db["machine_health_arr"]
+        if health[machine_id] < 5:
+            health[machine_id] += 1
+        db["machine_health_arr"] = health
+
 
 # ############## GENERAL UTILITIES ###################
 
