@@ -40,6 +40,28 @@ def clear_and_restart():
     db["win"] = False
     db["machine_health_arr"] = [5, 5, 5, 5, 5]
     db["assignments"] = []
+    db["counter"] = 0
+
+
+def check_if_everything_is_initialized():
+    db = shelve.open(DATABASE)
+    if "players" not in db.keys():
+        db["players"] = []
+
+    if "running" not in db.keys():
+        db["running"] = True
+
+    if "win" not in db.keys():
+        db["win"] = False
+
+    if "machine_health_arr" not in db.keys():
+        db["machine_health_arr"] = [5, 5, 5, 5, 5]
+
+    if "assignments" not in db.keys():
+        db["assignments"] = []
+
+    if "counter" not in db.keys():
+        db["counter"] = 0
 
 
 # ############## GAME SETUP ##################
@@ -165,25 +187,12 @@ def start_game():
     return json.dumps({"username_list": [ob for ob in db["players"]]})
 
 
-# ############## COMMANDER ##################
-
-def set_state():
-    """ Set overall ship health, machine healths, and machine assignments
-    :param: ship_health
-    :param: machine_healths
-    :param: current_tasks [task_id, user_id, machine_id]
-    """
-    pass
-
-
-def get_task_status():
-    """
-    :param: task_id
-    :return: task_status
-    """
-    pass
-
-# ############## PLAYER ##################
+@application.route('/get_state', methods=['GET', 'POST'])
+def gs():
+    if request.method == 'GET':
+        return get_state()
+    else:
+        return error_message()
 
 
 def get_state():
@@ -195,7 +204,40 @@ def get_state():
 
     task_id is a unique integer which increments as new tasks are generated
     """
-    return "<h1>GAME STATUS</h1>\n"
+
+    db = shelve.open(DATABASE)
+
+    check_if_everything_is_initialized()
+
+    state = jsonify({"running": db["running"],
+                     "win": db["win"],
+                     "machine_health_arr": db["machine_health_arr"],
+                     "assignments": db["assignments"],
+                     "counter": db["counter"]})
+
+    return state
+
+
+# ############## COMMANDER ##################
+
+# def set_state():
+#     """ Set overall ship health, machine healths, and machine assignments
+#     :param: ship_health
+#     :param: machine_healths
+#     :param: current_tasks [task_id, user_id, machine_id]
+#     """
+#     pass
+
+
+def get_task_status():
+    """
+    :param: task_id
+    :return: task_status
+    """
+    pass
+
+# ############## PLAYER ##################
+
 
 
 def set_task_status():
