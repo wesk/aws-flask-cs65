@@ -203,7 +203,7 @@ def start_game():
     # health
     db["machine_health_arr"] = [3, 3, 3, 3, 3]
 
-    return json.dumps({"username_list": [ob for ob in db["players"]]})
+    return jsonify({"username_list": [ob for ob in db["players"]]})
 
 
 @application.route('/get_state', methods=['GET', 'POST'])
