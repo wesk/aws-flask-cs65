@@ -220,13 +220,6 @@ def get_state():
 
 # ############## COMMANDER ##################
 
-# def set_state():
-#     """ Set overall ship health, machine healths, and machine assignments
-#     :param: ship_health
-#     :param: machine_healths
-#     :param: current_tasks [task_id, user_id, machine_id]
-#     """
-#     pass
 
 @application.route('/commander_set_assignment', methods=['GET', 'POST'])
 def assign():
@@ -251,22 +244,36 @@ def set_assignment(player_id, machine_id):
     # increment counter
     db["counter"] += 1
 
+    # check to see if player_id is within range
+    if player_id < 0 or player_id >= len(db["players"]):
+        return error_message("player_id out of range")
+
+    # check to see if machine_id is within range
+    if machine_id < 0 or machine_id > 4:
+        return error_message("machine_id out of range")
+
     if not db["assignments"]:
         db["assignments"] = [[player_id, machine_id]]
         return success_message()
 
     machine_already_assigned = False
+    player_already_assigned = False
     for assignment in db["assignments"]:
+        if assignment[0] == player_id:
+            player_already_assigned = True
         if assignment[1] == machine_id:
             machine_already_assigned = True
 
     if machine_already_assigned:
-        return error_message()
-    else:
-        assig = db["assignments"]
-        assig.append([player_id, machine_id])
-        db["assignments"] = assig
-        return success_message()
+        return error_message("machine_id already assigned")
+
+    if player_already_assigned:
+        return error_message("player_id already assigned")
+
+    assig = db["assignments"]
+    assig.append([player_id, machine_id])
+    db["assignments"] = assig
+    return success_message()
 
 
 @application.route('/commander_generate_event', methods=['GET', 'POST'])
@@ -274,7 +281,7 @@ def gen_ev():
     if request.method == 'GET':
         return generate_event()
     else:
-        return error_message()
+        return error_message("must use GET request")
 
 
 def generate_event():
@@ -301,9 +308,9 @@ def set_res():
         if "machine_id" in dat and "result" in dat:
             return set_task_result(dat["machine_id"], dat["result"])
         else:
-            return error_message()
+            return error_message("missing machine_id and or result")
     else:
-        return error_message()
+        return error_message("must use POST request")
 
 
 def set_task_result(machine_id, result):
@@ -320,6 +327,10 @@ def set_task_result(machine_id, result):
     # increment counter
     db["counter"] += 1
 
+    # check to see if machine_id is in range
+    if machine_id < 0 or machine_id > 4:
+        return error_message("machine_id index out of range")
+
     # check to see if this is a valid request
     found = False
     found_id = -1
@@ -328,7 +339,7 @@ def set_task_result(machine_id, result):
             found = True
             found_id = index
     if not found:
-        return error_message()
+        return error_message("this machine_id was not currently assigned as a task")
 
     # found! so remove it from the assignments dictionary
     assi = db["assignments"]
@@ -349,8 +360,8 @@ def set_task_result(machine_id, result):
 # ############## GENERAL UTILITIES ###################
 
 
-def error_message():
-    err = {"ERROR": "Invalid Request"}
+def error_message(message):
+    err = {"ERROR": message}
     return jsonify(err)
 
 
