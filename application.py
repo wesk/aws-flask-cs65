@@ -61,6 +61,22 @@ def check_if_everything_is_initialized():
         db["counter"] = 0
 
 
+def game_over_check():
+    db = shelve.open(DATABASE)
+
+    # calculate ship health
+    tot = 0
+    for hval in db["machine_health_arr"]:
+        tot += hval
+
+    # check if lose
+    if tot <= 0:
+        db["session_status"] = "lose"
+
+    # check if win
+    if tot >= 25:
+        db["session_status"] = "win"
+
 # ############## GAME SETUP ##################
 
 @application.route('/create_game', methods=['GET', 'POST'])
@@ -112,7 +128,7 @@ def create_acct():
             return "fail"
         # return create_account(request.args.get("game_id"))
     else:
-        return error_message()
+        return error_message("Must make a POST request")
 
 
 def create_account(username):
@@ -145,7 +161,7 @@ def num_players():
     if request.method == 'GET':
         return get_number_of_players()
     else:
-        return error_message()
+        return error_message("Must make a GET request")
 
 
 def get_number_of_players():
@@ -166,7 +182,7 @@ def start():
     if request.method == 'GET':
         return start_game()
     else:
-        return error_message()
+        return error_message("Must make a GET request")
 
 
 def start_game():
@@ -193,7 +209,7 @@ def gs():
     if request.method == 'GET':
         return get_state()
     else:
-        return error_message()
+        return error_message("Must make a GET request")
 
 
 def get_state():
@@ -228,9 +244,9 @@ def assign():
         if "player_id" in dat and "machine_id" in dat:
             return set_assignment(dat["player_id"], dat["machine_id"])
         else:
-            return error_message()
+            return error_message("Missing player_id and or machine_id")
     else:
-        return error_message()
+        return error_message("Must make a POST request")
 
 
 def set_assignment(player_id, machine_id):
@@ -285,7 +301,7 @@ def gen_ev():
 
 
 def generate_event():
-    """for now, just decrement the health of machine 0 for testing"""
+    """Randomly decrement the health (-=1) of a machine that has > 0 health."""
 
     db = shelve.open(DATABASE)
     check_if_everything_is_initialized()
@@ -296,6 +312,10 @@ def generate_event():
     health = db["machine_health_arr"]
     health[0] -= 1
     db["machine_health_arr"] = health
+
+    # check if game over
+    game_over_check()
+
     return success_message()
 
 
