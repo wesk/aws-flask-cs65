@@ -244,17 +244,22 @@ def set_assignment(player_id, machine_id):
     db = shelve.open(DATABASE)
     check_if_everything_is_initialized()
 
-    if len(db["assignments"]) == 0:
-        db["assignments"] = db["assignments"].append([player_id, machine_id])
+    if not db["assignments"]:
+        db["assignments"] = [[player_id, machine_id]]
+        return success_message()
 
+    machine_already_assigned = False
+    for assignment in db["assignments"]:
+        if assignment[1] == machine_id:
+            machine_already_assigned = True
+
+    if machine_already_assigned:
+        return error_message()
     else:
-        machine_already_assigned = False
-        for pId, mId in db["assignments"]:
-            if mId == machine_id:
-                machine_already_assigned = True
-
-        if not machine_already_assigned:
-            db["assignments"] = db["assignments"].append([player_id, machine_id])
+        assig = db["assignments"]
+        assig.append([player_id, machine_id])
+        db["assignments"] = assig
+        return success_message()
 
 
 @application.route('/commander_generate_event', methods=['GET', 'POST'])
@@ -274,6 +279,7 @@ def generate_event():
     health = db["machine_health_arr"]
     health[0] -= 1
     db["machine_health_arr"] = health
+    return success_message()
 
 
 # ############## PLAYER ##################
@@ -311,7 +317,7 @@ def set_task_result(machine_id, result):
     if not found:
         return error_message()
 
-    # remove it from the assignments dictionary
+    # found! so remove it from the assignments dictionary
     assi = db["assignments"]
     del assi[found_id]
     db["assignments"] = assi
@@ -324,6 +330,8 @@ def set_task_result(machine_id, result):
             health[machine_id] += 1
         db["machine_health_arr"] = health
 
+    return success_message()
+
 
 # ############## GENERAL UTILITIES ###################
 
@@ -331,6 +339,11 @@ def set_task_result(machine_id, result):
 def error_message():
     err = {"ERROR": "Invalid Request"}
     return jsonify(err)
+
+
+def success_message():
+    msg = {"STATUS": "SUCCESS"}
+    return jsonify(msg)
 
 
 # # print a nice greeting.
