@@ -1,7 +1,7 @@
 import os
 # import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
-     render_template, flash, jsonify
+     render_template, flash, jsonify, make_response
 
 import shelve
 import random
@@ -44,6 +44,12 @@ def clear_and_restart():
 
 # ############## GAME SETUP ##################
 
+@application.route('/create_game', methods=['GET', 'POST'])
+def create():
+    if request.method == 'GET':
+        return create_game()
+
+
 def create_game():
     """Commander begins the game setup process with this command
 
@@ -55,16 +61,9 @@ def create_game():
 
     num = random.randint(10, 1000)
     # print(num)
-    #return str(num)
+    # return str(num)
     data = {"game_code": num}
     return jsonify(data)
-
-
-@application.route('/create_game', methods=['GET', 'POST'])
-def create():
-    if request.method == 'GET':
-        return create_game()
-
 
 # def pickle_post():
 #     db = shelve.open("spam")
@@ -122,18 +121,48 @@ def create_account(username):
     return jsonify({"STATUS": "SUCCESS", "user_id": len(username_list) - 1})
 
 
+@application.route('/number_of_players', methods=['GET', 'POST'])
+def num_players():
+    if request.method == 'GET':
+        return get_number_of_players()
+    else:
+        return error_message()
+
+
 def get_number_of_players():
     """Commander can see how many players have logged into the session so far
 
     :return: number_of_players
     """
+    db = shelve.open(DATABASE)
+
+    if "players" not in db.keys():
+        db["players"] = []
+
+    return jsonify({"number_of_players": len(db["players"])})
+
+
+@application.route('/start_game', methods=['GET', 'POST'])
+def start():
+    if request.method == 'GET':
+        return start_game()
+    else:
+        return error_message()
 
 
 def start_game():
     """
 
-    Once all the players have created accounts, the commander can start the game"""
-    pass
+    Once all the players have created accounts, the commander can start the game
+
+    :return player_list"""
+
+    db = shelve.open(DATABASE)
+
+    if "players" not in db.keys():
+        db["players"] = []
+
+    return json.dumps({"username_list": [ob for ob in db["players"]]})
 
 
 # ############## COMMANDER ##################
