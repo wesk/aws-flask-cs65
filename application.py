@@ -61,23 +61,25 @@ def check_if_everything_is_initialized():
         db["counter"] = 0
 
 
-def game_over_check():
-    db = shelve.open(DATABASE)
-
-    # calculate ship health
-    tot = 0
-    for hval in db["machine_health_arr"]:
-        tot += hval
-
-    # check if lose
-    if tot <= 0:
-        db["session_status"] = "lose"
-
-    # check if win
-    if tot >= 25:
-        db["session_status"] = "win"
+# def game_over_check():
+#     # db = shelve.open(DATABASE)
+#
+#     # calculate ship health
+#     tot = 0
+#     health_array = db["machine_health_arr"]
+#     for h in health_array:
+#         tot += h
+#
+#     # check if lose
+#     if tot <= 0:
+#         db["session_status"] = "lose"
+#
+#     # check if win
+#     if tot >= 25:
+#         db["session_status"] = "win"
 
 # ############## GAME SETUP ##################
+
 
 @application.route('/create_game', methods=['GET', 'POST'])
 def create():
@@ -148,7 +150,7 @@ def create_account(username):
 
     username_list = db["players"]
     if username in username_list:
-        return jsonify({"STATUS": "FAILURE"})
+        return error_message("Username already in use.")
 
     username_list.append(username)
     db["players"] = username_list
@@ -309,12 +311,34 @@ def generate_event():
     # increment counter
     db["counter"] += 1
 
+    # randomly select a machine which has positive health, and decrement its health by 1
     health = db["machine_health_arr"]
-    health[0] -= 1
+    pos_health_machine_list = []
+    for index in range(5):
+        if health[index] > 0:
+            pos_health_machine_list.append(index)
+
+    if pos_health_machine_list:
+        rand_choice = random.choice(pos_health_machine_list)
+    else:
+        return error_message("all machines are at health zero")
+
+    health[rand_choice] -= 1
     db["machine_health_arr"] = health
 
     # check if game over
-    game_over_check()
+    tot = 0
+    health_array = db["machine_health_arr"]
+    for h in health_array:
+        tot += h
+
+    # check if lose
+    if tot <= 0:
+        db["session_status"] = "lose"
+
+    # check if win
+    if tot >= 25:
+        db["session_status"] = "win"
 
     return success_message()
 
@@ -373,6 +397,21 @@ def set_task_result(machine_id, result):
         if health[machine_id] < 5:
             health[machine_id] += 1
         db["machine_health_arr"] = health
+
+    # check if game over
+    tot = 0
+    health_array = db["machine_health_arr"]
+    for h in health_array:
+        tot += h
+
+    # check if lose
+    if tot <= 0:
+        db["session_status"] = "lose"
+
+    # check if win
+    if tot >= 25:
+        db["session_status"] = "win"
+
 
     return success_message()
 
