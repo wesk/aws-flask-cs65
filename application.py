@@ -273,7 +273,7 @@ def set_assignment(player_id, machine_id):
     # machine health must be above zero and less than 5
     if 0 >= db["machine_health_arr"][machine_id]:
         return error_message("Machine id " + str(machine_id) + "'s health is too low")
-    if db["machine_health_arr"][machine_id] <= 5:
+    if db["machine_health_arr"][machine_id] >= 5:
         return error_message("Machine id " + str(machine_id) + "'s health is too high")
 
     if not db["assignments"]:
