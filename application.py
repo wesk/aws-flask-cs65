@@ -122,15 +122,14 @@ def create_game():
 
 @application.route('/create_acct', methods=['GET', 'POST'])
 def create_acct():
-    if request.method == 'POST':
-        dat = request.get_json()
-        if "game_id" in dat and "username" in dat:
-            return create_account(dat["username"])
-        else:
-            return error_message("missing game_id and or username")
-        # return create_account(request.args.get("game_id"))
+
+    dat = request.get_json()
+    if "game_id" in dat and "username" in dat:
+        return create_account(dat["username"])
     else:
-        return error_message("Must make a POST request")
+        return error_message("missing game_id and or username")
+    # return create_account(request.args.get("game_id"))
+
 
 
 def create_account(username):
@@ -155,11 +154,7 @@ def create_account(username):
     username_list.append(username)
     db["players"] = username_list
 
-    data_to_return = jsonify({"STATUS": "SUCCESS", "user_id": len(username_list) - 1})
-    # #dat = json.load(data_to_return)
-    # dat = data_to_return.json
-    # assert dat["STATUS"] == "SUCCESS"
-    # assert dat["user_id"] == len(username_list) - 1
+    data_to_return = jsonify({"STATUS": "SUCCESS", "player_id": len(username_list) - 1})
     return data_to_return
 
 
