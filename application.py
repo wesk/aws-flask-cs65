@@ -177,9 +177,13 @@ def start_game():
     :return player_list"""
 
     db = shelve.open(DATABASE)
+    check_if_everything_is_initialized()
 
-    if "players" not in db.keys():
-        db["players"] = []
+    # start the game
+    db["session_status"] = "running"
+
+    # health
+    db["machine_health_arr"] = [3, 3, 3, 3, 3]
 
     return json.dumps({"username_list": [ob for ob in db["players"]]})
 
@@ -244,6 +248,9 @@ def set_assignment(player_id, machine_id):
     db = shelve.open(DATABASE)
     check_if_everything_is_initialized()
 
+    # increment counter
+    db["counter"] += 1
+
     if not db["assignments"]:
         db["assignments"] = [[player_id, machine_id]]
         return success_message()
@@ -276,6 +283,9 @@ def generate_event():
     db = shelve.open(DATABASE)
     check_if_everything_is_initialized()
 
+    # increment counter
+    db["counter"] += 1
+
     health = db["machine_health_arr"]
     health[0] -= 1
     db["machine_health_arr"] = health
@@ -306,6 +316,9 @@ def set_task_result(machine_id, result):
 
     db = shelve.open(DATABASE)
     check_if_everything_is_initialized()
+
+    # increment counter
+    db["counter"] += 1
 
     # check to see if this is a valid request
     found = False
