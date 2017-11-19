@@ -203,6 +203,9 @@ def start_game():
     # health
     db["machine_health_arr"] = [3, 3, 3, 3, 3]
 
+    # increment counter
+    db["counter"] += 1
+
     return jsonify({"username_list": [ob for ob in db["players"]]})
 
 
