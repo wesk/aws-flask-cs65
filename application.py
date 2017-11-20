@@ -428,9 +428,7 @@ def success_message():
     return jsonify(msg)
 
 
-# # print a nice greeting.
-# def say_hello(username = "World"):
-#     return '<p>Hello %s!</p>\n' % username
+
 #
 #
 #
@@ -445,20 +443,18 @@ def success_message():
 header_text = '''
     <html>\n<head> <title>CS65 Final Project Server</title> </head>\n<body>'''
 instructions = '''
-    <p><em>Hint</em>: This is a RESTful web service! Append a username
-    to the URL (for example: <code>/Thelonious</code>) to say hello to
-    someone specific.</p>\n'''
-home_link = '<p><a href="/">Back</a></p>\n'
+    <p>CS65 Final Project Server</p><p><em>Wes Kendrick, Serena Zhu, Naman Goyal</em></p><p><a href="https://github.com/wesk/aws-flask-cs65">https://github.com/wesk/aws-flask-cs65</a></p>\n'''
+
 footer_text = '</body>\n</html>'
 
 
 
-# # add a rule for the index page.
-# application.add_url_rule('/', 'index', (lambda: header_text +
-#     say_hello() + instructions + footer_text))
-#
-# # /status displays the ship status
-# application.add_url_rule('/state', "get_game_state", get_game_state)
+# add a rule for the index page.
+application.add_url_rule('/', 'index', (lambda: header_text + instructions + footer_text))
+
+# print a nice greeting.
+def say_hello(username = "World"):
+    return '<p>Hello %s!</p>\n' % username
 
 
 # @application.route('/login', methods=['GET', 'POST'])
