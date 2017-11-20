@@ -7,15 +7,27 @@
 *CS65: Android Programming with Professor Bratus*  
 *Serena Zhu, Wes Kendrick, and Naman Goyal*
 
-DOCUMENTATION:
+https://hyperspaceheroes.com
+
+## Technical Overview:
+
+- Written with the [Python Flask](http://flask.pocoo.org/) framework
+- We store data with  [shelve](https://docs.python.org/3/library/shelve.html) -- object persistence built into the Python Standard Library. It's very simple to use, and eliminates the need for separate database code.
+- Deploy with [AWS Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/).
+
+## Features:
+
+- HTTPS!!!
+- Dynamic load scaling relative to client demand
+
+## API DOCUMENTATION:
 - /create_game
   - GET
   - https://hyperspaceheroes.com/create_game
   - example_parameters: ``
-  - example response: ```
-  {
+  - example response: `{
   "game_id": 287
-}```
+}`
 - /create_acct
   - POST
   - https://hyperspaceheroes.com/create_acct
