@@ -96,28 +96,14 @@ def create_game():
     # reset all existing data to defaults
     clear_and_restart()
 
+    db = shelve.open(DATABASE)
+
+    # generate and save random number
     num = random.randint(10, 1000)
-    # print(num)
-    # return str(num)
+    db["game_id"] = num
+
     data = {"game_id": num}
     return jsonify(data)
-
-# def pickle_post():
-#     db = shelve.open("spam")
-#     db['eggs'] = 'eggooo'
-#     return "posted"
-#
-#
-# def pickle_get():
-#     db = shelve.open("spam")
-#     a = "fail"
-#     try:
-#         if db.__contains__('eggs'):
-#             a = db['eggs']
-#     finally:
-#         db.close()
-#     return a
-#     # return "failure"
 
 
 @application.route('/create_acct', methods=['GET', 'POST'])
@@ -125,14 +111,14 @@ def create_acct():
 
     dat = request.get_json()
     if "game_id" in dat and "username" in dat:
-        return create_account(dat["username"])
+        return create_account(dat["game_id"], dat["username"])
     else:
         return error_message("missing game_id and or username")
     # return create_account(request.args.get("game_id"))
 
 
 
-def create_account(username):
+def create_account(game_id, username):
     """POST
 
     Players create their accounts once the game code has been sent out
@@ -147,9 +133,14 @@ def create_account(username):
     if "players" not in db.keys():
         db["players"] = []
 
+    # check username
     username_list = db["players"]
     if username in username_list:
         return error_message("Username already in use.")
+
+    # check game_id
+    if not game_id.equals(db["game_id"]):
+        return error_message("invalid game_id")
 
     username_list.append(username)
     db["players"] = username_list
@@ -420,7 +411,6 @@ def set_task_result(machine_id, result):
     # check if win
     if tot >= 25:
         db["session_status"] = "win"
-
 
     return success_message()
 
