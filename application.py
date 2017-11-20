@@ -139,7 +139,7 @@ def create_account(game_id, username):
         return error_message("Username already in use.")
 
     # check game_id
-    if not game_id.equals(db["game_id"]):
+    if game_id != db["game_id"]:
         return error_message("invalid game_id")
 
     username_list.append(username)
