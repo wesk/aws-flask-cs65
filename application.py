@@ -333,11 +333,11 @@ def generate_event():
         tot += h
 
     # check if lose
-    if tot <= 0:
+    if tot <= 4:
         db["session_status"] = "lose"
 
     # check if win
-    if tot >= 25:
+    if tot >= 20:
         db["session_status"] = "win"
 
     return success_message()
